@@ -1,7 +1,7 @@
 {
     "manifest_version": 2,
     "name": "CA6.DEV LiveTS",
-    "version": "1.0",
+    "version": "0.1.0",
     "permissions": ["activeTab", "https://www.youtube.com/*", "downloads"],
     "content_scripts": [
         {

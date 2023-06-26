@@ -13,18 +13,39 @@ script.remove();
 
 let observer = new MutationObserver(function() {
     video = document.querySelector('video');
-    let titleElement = document.querySelector('#scroll-container.yt-chip-cloud-renderer');
+
+    //let titleElement = document.querySelector('#scroll-container.yt-chip-cloud-renderer');
+    let titleElement = document.querySelector('#secondary-inner.ytd-watch-flexy');
+    
     let outputTimestamp = "";
 
     if (video && titleElement) {
 
-        textElement = document.createElement('span');
-        textElement.style.fontSize = '18px';
-        textElement.style.marginRight = '10px';
-        textElement.style.color = '#1e90ff';
-        textElement.textContent = `CA6 LiveTS`;
 
-        timestampElement = document.createElement('span');
+
+        let toggleButton = document.createElement('button');
+        toggleButton.innerText = 'CA6 LiveTS';
+        toggleButton.style.fontSize = '18px';
+        toggleButton.style.fontWeight = 'bold';
+        toggleButton.style.padding = '5px 10px';
+        toggleButton.style.border = 'none';
+        toggleButton.style.borderRadius = '5px';
+        toggleButton.style.cursor = 'pointer';
+        toggleButton.style.color = 'red';
+        toggleButton.style.backgroundColor = '#1e90ff';
+        toggleButton.addEventListener('click', function() {
+            let container = document.querySelector('#livets-iner-container');
+            if (container.style.display === 'none') {
+                container.style.display = 'block';
+                // container.style.alignItems = 'left';
+                // container.style.flexWrap = 'wrap';
+                // container.style.flexDirection = 'column';
+            } else {
+                container.style.display = 'none';
+            }
+        });
+
+        let timestampElement = document.createElement('span');
         timestampElement.style.fontSize = '18px';
         timestampElement.style.marginRight = '10px';
         timestampElement.style.color = '#1e90ff';
@@ -175,6 +196,8 @@ let observer = new MutationObserver(function() {
         buttonMarkNElement.style.cursor = 'pointer';
         buttonMarkNElement.addEventListener('click', function() {
             outputTimestamp = `${formatTime(0)}`;
+            //video.currentTime = 0;
+            //video.currentTime = video.duration;
         
             console.log(outputTimestamp);
             outputElement.value = outputTimestamp;
@@ -210,6 +233,12 @@ let observer = new MutationObserver(function() {
             }
         
             outputTexts.push(outputText);  // Add the new output text to the list
+
+            navigator.clipboard.writeText(outputText).then(function() {
+                console.log('Copying to clipboard was successful!');
+            }, function(err) {
+                console.error('Could not copy text: ', err);
+            });
         
             console.log(outputText);
             outputElement.value = outputText;
@@ -301,8 +330,15 @@ let observer = new MutationObserver(function() {
         let fifthRow = document.createElement('div');
         let sixthhRow = document.createElement('div');
         let seventhRow = document.createElement('div');
+
+        let livetsContainer = document.createElement('div');
+        livetsContainer.id = 'livets-container';
+
+        let livetsinerContainer = document.createElement('div');
+        livetsinerContainer.id = 'livets-iner-container';
+        livetsinerContainer.style.display = 'none';
         
-        firstRow.appendChild(textElement);
+        firstRow.appendChild(toggleButton);
         firstRow.appendChild(timestampElement);
 
         thirdRow.appendChild(activitySelect);
@@ -325,17 +361,22 @@ let observer = new MutationObserver(function() {
 
         seventhRow.appendChild(eraseButton);
 
-        titleElement.appendChild(firstRow);
-        titleElement.appendChild(secondRow);
-        titleElement.appendChild(thirdRow);
-        titleElement.appendChild(fourthRow);
-        titleElement.appendChild(fifthRow);
-        titleElement.appendChild(sixthhRow);
-        titleElement.appendChild(seventhRow);
+        livetsinerContainer.appendChild(secondRow);
+        livetsinerContainer.appendChild(thirdRow);
+        livetsinerContainer.appendChild(fourthRow);
+        livetsinerContainer.appendChild(fifthRow);
+        livetsinerContainer.appendChild(sixthhRow);
+        livetsinerContainer.appendChild(seventhRow);
 
-        titleElement.style.display = 'flex';
-        titleElement.style.alignItems = 'center';
-        titleElement.style.flexWrap = 'wrap';
+        livetsContainer.appendChild(firstRow);
+        livetsContainer.appendChild(livetsinerContainer);
+
+        titleElement.prepend(livetsContainer);
+
+        // titleElement.style.display = 'flex';
+        // titleElement.style.alignItems = 'left';
+        // titleElement.style.flexWrap = 'wrap';
+        // titleElement.style.flexDirection = 'column';
 
         intervalId = setInterval(function() {
             timestampElement.textContent = `${formatTime(video.currentTime)}`;
