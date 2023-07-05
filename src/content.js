@@ -248,7 +248,7 @@ let observer = new MutationObserver(function() {
         activitySelect.style.fontSize = '18px';
         activitySelect.style.padding = '5px';
 
-        let options = ["", "Start", "Loading", "Zatsudan", "Gaming", "Karaoke", "Ending", "End", "Break", "Misc", "@TS", "@LiveTS"];
+        let options = ["", "Start", "Loading", "Break", "Ending", "End", "Zatsudan", "Gaming", "Karaoke", "Art", "Misc", "!TS", "!LiveTS"];
 
         options.forEach(function(optionText) {
             let optionElement = document.createElement('option');
