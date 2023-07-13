@@ -24,7 +24,7 @@ let observer = new MutationObserver(function() {
 
 
         let toggleButton = document.createElement('button');
-        toggleButton.innerText = 'CA6 LiveTS';
+        toggleButton.innerText = 'LiveTS';
         toggleButton.style.fontSize = '18px';
         toggleButton.style.fontWeight = 'bold';
         toggleButton.style.padding = '5px 10px';
