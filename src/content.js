@@ -596,7 +596,7 @@ function getHeader() {
     // {date in yyyy-mm-dd} ~ {page title} {cariage return }
     // URL: {url}
     let now = new Date();
-    let headerText = now.toISOString().slice(0,10) + " ~ " + document.title + "\nURL: " + url + "\n" + "0:00:00 Start\n";
+    let headerText = now.toISOString().slice(0,10) + " ~ " + document.title + "\nURL: " + url + "\nLiveTs:\n" + "0:00:00 Start\n";
 
     fileName = now.toISOString().slice(0,10) + " ~ " + title + ".txt";
 
