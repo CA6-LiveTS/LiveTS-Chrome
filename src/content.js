@@ -1,393 +1,470 @@
-let intervalId = null;
-let video = null;
-let timestampElement = null;
 
+let selectedTime = 0;   // time selected by user
+let currentTime = 0;    // current time of video
+
+let timestampLine;
 let outputTexts = [];
+let fileName;
 
-let script = document.createElement('script');
-script.textContent = `
-    window.activity = "Start";
-`;
-document.documentElement.appendChild(script);
-script.remove();
+let livetsContainer;
+let livetsinerContainer;
+let options = ["", "Loading", "Break", "Ending", "End", "Zatsudan", "Gaming", "Karaoke", "Art", "Misc", "!TS", "!LiveTS"];
+
+// ****************************************************************************
+//                                      UI
+// ****************************************************************************
 
 let observer = new MutationObserver(function() {
-    video = document.querySelector('video');
+    let titleElement = getTitleElement();
 
-    //let titleElement = document.querySelector('#scroll-container.yt-chip-cloud-renderer');
-    let titleElement = document.querySelector('#secondary-inner.ytd-watch-flexy');
-    
-    let outputTimestamp = "";
+    let toggleButton = document.createElement('button');
+    toggleButton.innerText = 'LiveTS';
+    toggleButton.style.fontSize = '18px';
+    toggleButton.style.fontWeight = 'bold';
+    toggleButton.style.padding = '5px 10px';
+    toggleButton.style.border = 'black solid 1px';
+    toggleButton.style.borderRadius = '5px';
+    toggleButton.style.cursor = 'pointer';
+    toggleButton.style.color = 'red';
+    toggleButton.style.backgroundColor = '#1e90ff';
+    toggleButton.addEventListener('click', function() {
+        if (livetsinerContainer.style.display === 'none') {
+            livetsinerContainer.style.display = 'block';
+        } else {
+            livetsinerContainer.style.display = 'none';
+        }
+    });
 
-    if (video && titleElement) {
+    let timestampElement = document.createElement('span');
+    timestampElement.style.fontSize = '18px';
+    timestampElement.style.marginRight = '10px';
+    timestampElement.style.color = '#1e90ff';
+    timestampElement.textContent = `${formatTime(currentTime)}`;
 
+    livetsContainer = document.createElement('div');
+    livetsContainer.id = 'livets-container';
 
+    livetsinerContainer = document.createElement('div');
+    livetsinerContainer.id = 'livets-iner-container';
+    livetsinerContainer.style.display = 'none';
 
-        let toggleButton = document.createElement('button');
-        toggleButton.innerText = 'LiveTS';
-        toggleButton.style.fontSize = '18px';
-        toggleButton.style.fontWeight = 'bold';
-        toggleButton.style.padding = '5px 10px';
-        toggleButton.style.border = 'none';
-        toggleButton.style.borderRadius = '5px';
-        toggleButton.style.cursor = 'pointer';
-        toggleButton.style.color = 'red';
-        toggleButton.style.backgroundColor = '#1e90ff';
-        toggleButton.addEventListener('click', function() {
-            let container = document.querySelector('#livets-iner-container');
-            if (container.style.display === 'none') {
-                container.style.display = 'block';
-                // container.style.alignItems = 'left';
-                // container.style.flexWrap = 'wrap';
-                // container.style.flexDirection = 'column';
-            } else {
-                container.style.display = 'none';
-            }
-        });
+    let firstRow = document.createElement('div');
+    firstRow.appendChild(toggleButton);
+    firstRow.appendChild(timestampElement);
 
-        let timestampElement = document.createElement('span');
-        timestampElement.style.fontSize = '18px';
-        timestampElement.style.marginRight = '10px';
-        timestampElement.style.color = '#1e90ff';
-        timestampElement.textContent = `${formatTime(video.currentTime)}`;
+    livetsContainer.appendChild(firstRow);
+    livetsContainer.appendChild(livetsinerContainer);
+    titleElement.prepend(livetsContainer);
 
-        let inputElement = document.createElement('input');
-        inputElement.type = 'text';
-        inputElement.style.fontSize = '18px';
-        inputElement.style.padding = '5px';
+    createUI();
 
-        let outputElement = document.createElement('input');
-        outputElement.type = 'text';
-        outputElement.style.fontSize = '18px';
-        outputElement.style.padding = '5px';
-        outputElement.readOnly = true;
+    intervalId = setInterval(function() {
+        getCurrentTime();
+        timestampElement.textContent = `${formatTime(selectedTime)} / ${formatTime(currentTime)}`;
+    }, 250);
 
-        let buttonMark0Element = document.createElement('button');
-        buttonMark0Element.textContent = '-00';
-        buttonMark0Element.style.fontSize = '18px';
-        buttonMark0Element.style.fontWeight = 'bold';
-        buttonMark0Element.style.padding = '5px 10px';
-        buttonMark0Element.style.backgroundColor = '#4cadf7';
-        buttonMark0Element.style.color = '#fff';
-        buttonMark0Element.style.border = 'none';
-        buttonMark0Element.style.borderRadius = '5px';
-        buttonMark0Element.style.cursor = 'pointer';
-        buttonMark0Element.addEventListener('click', function() {
-            outputTimestamp = `${formatTime(video.currentTime)}`;
-        
-            console.log(outputTimestamp);
-            outputElement.value = outputTimestamp;
-        });
-
-        let buttonMark5Element = document.createElement('button');
-        buttonMark5Element.textContent = '-05';
-        buttonMark5Element.style.fontSize = '18px';
-        buttonMark5Element.style.fontWeight = 'bold';
-        buttonMark5Element.style.padding = '5px 10px';
-        buttonMark5Element.style.backgroundColor = '#4cadf7';
-        buttonMark5Element.style.color = '#fff';
-        buttonMark5Element.style.border = 'none';
-        buttonMark5Element.style.borderRadius = '5px';
-        buttonMark5Element.style.cursor = 'pointer';
-        buttonMark5Element.addEventListener('click', function() {
-            if(video.currentTime > 5){
-                outputTimestamp = `${formatTime(video.currentTime-5)}`;
-            } else {
-                outputTimestamp = `${formatTime(0)}`;
-            }
-        
-            console.log(outputTimestamp);
-            outputElement.value = outputTimestamp;
-        });
-
-        let buttonMark10Element = document.createElement('button');
-        buttonMark10Element.textContent = '-10';
-        buttonMark10Element.style.fontSize = '18px';
-        buttonMark10Element.style.fontWeight = 'bold';
-        buttonMark10Element.style.padding = '5px 10px';
-        buttonMark10Element.style.backgroundColor = '#4cadf7';
-        buttonMark10Element.style.color = '#fff';
-        buttonMark10Element.style.border = 'none';
-        buttonMark10Element.style.borderRadius = '5px';
-        buttonMark10Element.style.cursor = 'pointer';
-        buttonMark10Element.addEventListener('click', function() {
-            if(video.currentTime > 10){
-                outputTimestamp = `${formatTime(video.currentTime-10)}`;
-            } else {
-                outputTimestamp = `${formatTime(0)}`;
-            }
-        
-            console.log(outputTimestamp);
-            outputElement.value = outputTimestamp;
-        });
-
-        let buttonMark15Element = document.createElement('button');
-        buttonMark15Element.textContent = '-15';
-        buttonMark15Element.style.fontSize = '18px';
-        buttonMark15Element.style.fontWeight = 'bold';
-        buttonMark15Element.style.padding = '5px 10px';
-        buttonMark15Element.style.backgroundColor = '#4cadf7';
-        buttonMark15Element.style.color = '#fff';
-        buttonMark15Element.style.border = 'none';
-        buttonMark15Element.style.borderRadius = '5px';
-        buttonMark15Element.style.cursor = 'pointer';
-        buttonMark15Element.addEventListener('click', function() {
-            if(video.currentTime > 15){
-                outputTimestamp = `${formatTime(video.currentTime-15)}`;
-            } else {
-                outputTimestamp = `${formatTime(0)}`;
-            }
-        
-            console.log(outputTimestamp);
-            outputElement.value = outputTimestamp;
-        });
-
-        let buttonMark20Element = document.createElement('button');
-        buttonMark20Element.textContent = '-20';
-        buttonMark20Element.style.fontSize = '18px';
-        buttonMark20Element.style.fontWeight = 'bold';
-        buttonMark20Element.style.padding = '5px 10px';
-        buttonMark20Element.style.backgroundColor = '#4cadf7';
-        buttonMark20Element.style.color = '#fff';
-        buttonMark20Element.style.border = 'none';
-        buttonMark20Element.style.borderRadius = '5px';
-        buttonMark20Element.style.cursor = 'pointer';
-        buttonMark20Element.addEventListener('click', function() {
-            if(video.currentTime > 20){
-                outputTimestamp = `${formatTime(video.currentTime-20)}`;
-            } else {
-                outputTimestamp = `${formatTime(0)}`;
-            }
-        
-            console.log(outputTimestamp);
-            outputElement.value = outputTimestamp;
-        });
-
-        let buttonMark30Element = document.createElement('button');
-        buttonMark30Element.textContent = '-30';
-        buttonMark30Element.style.fontSize = '18px';
-        buttonMark30Element.style.fontWeight = 'bold';
-        buttonMark30Element.style.padding = '5px 10px';
-        buttonMark30Element.style.backgroundColor = '#4cadf7';
-        buttonMark30Element.style.color = '#fff';
-        buttonMark30Element.style.border = 'none';
-        buttonMark30Element.style.borderRadius = '5px';
-        buttonMark30Element.style.cursor = 'pointer';
-        buttonMark30Element.addEventListener('click', function() {
-            if(video.currentTime > 30){
-                outputTimestamp = `${formatTime(video.currentTime-30)}`;
-            } else {
-                outputTimestamp = `${formatTime(0)}`;
-            }
-        
-            console.log(outputTimestamp);
-            outputElement.value = outputTimestamp;
-        });
-
-        let buttonMarkNElement = document.createElement('button');
-        buttonMarkNElement.textContent = 'Null';
-        buttonMarkNElement.style.fontSize = '18px';
-        buttonMarkNElement.style.fontWeight = 'bold';
-        buttonMarkNElement.style.padding = '5px 10px';
-        buttonMarkNElement.style.backgroundColor = '#4cadf7';
-        buttonMarkNElement.style.color = '#fff';
-        buttonMarkNElement.style.border = 'none';
-        buttonMarkNElement.style.borderRadius = '5px';
-        buttonMarkNElement.style.cursor = 'pointer';
-        buttonMarkNElement.addEventListener('click', function() {
-            outputTimestamp = `${formatTime(0)}`;
-            //video.currentTime = 0;
-            //video.currentTime = video.duration;
-        
-            console.log(outputTimestamp);
-            outputElement.value = outputTimestamp;
-        });
-
-        let buttonElement = document.createElement('button');
-        buttonElement.textContent = 'LiveTS';
-        buttonElement.style.fontSize = '18px';
-        buttonElement.style.fontWeight = 'bold';
-        buttonElement.style.padding = '5px 10px';
-        buttonElement.style.backgroundColor = '#66d672';
-        buttonElement.style.color = '#fff';
-        buttonElement.style.border = 'none';
-        buttonElement.style.borderRadius = '5px';
-        buttonElement.style.cursor = 'pointer';
-        buttonElement.addEventListener('click', function() {
-            let outputText = "";
-            if(activitySelect.value == "" || inputElement.value == ""){
-                outputText = `${outputTimestamp} ${activitySelect.value}${inputElement.value}`;
-            } else {
-                outputText = `${outputTimestamp} ${activitySelect.value} ~ ${inputElement.value}`;
-            }
-        
-            // If this is the first output text, add the title of the page to outputTexts
-            if (outputTexts.length === 0) {
-                
-                let now = new Date();
-                let atitle = now.toISOString().slice(0,10) + " ~ " + document.title;
-
-                outputTexts.push(atitle);
-                outputTexts.push("URL: " + window.location.href);
-                outputTexts.push("LiveTs:");
-            }
-        
-            outputTexts.push(outputText);  // Add the new output text to the list
-
-            navigator.clipboard.writeText(outputText).then(function() {
-                console.log('Copying to clipboard was successful!');
-            }, function(err) {
-                console.error('Could not copy text: ', err);
-            });
-        
-            console.log(outputText);
-            outputElement.value = outputText;
-        });
-
-        let activitySelect = document.createElement('select');
-        activitySelect.style.fontSize = '18px';
-        activitySelect.style.padding = '5px';
-
-        let options = ["", "Start", "Loading", "Break", "Ending", "End", "Zatsudan", "Gaming", "Karaoke", "Art", "Misc", "!TS", "!LiveTS"];
-
-        options.forEach(function(optionText) {
-            let optionElement = document.createElement('option');
-            optionElement.textContent = optionText;
-            optionElement.value = optionText;
-
-            activitySelect.appendChild(optionElement);
-        });
-
-        activitySelect.addEventListener('change', function() {
-            window.activity = this.value;
-        });
-        
-        let copyButton = document.createElement('button');
-        copyButton.textContent = 'Copy';
-        copyButton.style.fontSize = '18px';
-        copyButton.style.fontWeight = 'bold';
-        copyButton.style.padding = '5px 10px';
-        copyButton.addEventListener('click', function() {
-            // Join the output texts into a single string with line breaks between them
-            let outputText = outputTexts.join('\n');
-        
-            // Copy outputText to clipboard
-            navigator.clipboard.writeText(outputText).then(function() {
-                console.log('Copying to clipboard was successful!');
-            }, function(err) {
-                console.error('Could not copy text: ', err);
-            });
-        });
-        
-        let downloadButton = document.createElement('button');
-        downloadButton.textContent = 'Download';
-        downloadButton.style.fontSize = '18px';
-        downloadButton.style.fontWeight = 'bold';
-        downloadButton.style.padding = '5px 10px';
-        downloadButton.addEventListener('click', function() {
-            let outputFile = `${document.title}.livets.txt`;
-
-            // Join the output texts into a single string with line breaks between them
-            let outputText = outputTexts.join('\n');
-
-            // Create a Blob with the outputText
-            let blob = new Blob([outputText], {type: 'text/plain'});
-
-            // Create a URL to the Blob
-            let url = URL.createObjectURL(blob);
-
-            // Create a link element, set its href to the Blob URL, and click it to start the download
-            let link = document.createElement('a');
-            link.href = url;
-            link.download = outputFile;
-            link.click();
-        });
-
-        let clearButton = document.createElement('button');
-        clearButton.textContent = 'Clear Input';
-        clearButton.style.fontSize = '18px';
-        clearButton.style.fontWeight = 'bold';
-        clearButton.style.padding = '5px 10px';
-        clearButton.addEventListener('click', function() {
-            inputElement.value = '';
-        });
-
-        let eraseButton = document.createElement('button');
-        eraseButton.textContent = 'Delete All TS';
-        eraseButton.style.fontSize = '18px';
-        eraseButton.style.fontWeight = 'bold';
-        eraseButton.style.padding = '5px 10px';
-        eraseButton.style.backgroundColor = 'red';
-        eraseButton.addEventListener('click', function() {
-            // Clear the list of output texts
-            outputTexts = [];
-        });
-
-        let firstRow = document.createElement('div');
-        let secondRow = document.createElement('div');
-        let thirdRow = document.createElement('div');
-        let fourthRow = document.createElement('div');
-        let fifthRow = document.createElement('div');
-        let sixthhRow = document.createElement('div');
-        let seventhRow = document.createElement('div');
-
-        let livetsContainer = document.createElement('div');
-        livetsContainer.id = 'livets-container';
-
-        let livetsinerContainer = document.createElement('div');
-        livetsinerContainer.id = 'livets-iner-container';
-        livetsinerContainer.style.display = 'none';
-        
-        firstRow.appendChild(toggleButton);
-        firstRow.appendChild(timestampElement);
-
-        thirdRow.appendChild(activitySelect);
-        thirdRow.appendChild(inputElement);
-
-        fourthRow.appendChild(buttonMark0Element);
-        fourthRow.appendChild(buttonMark5Element);
-        fourthRow.appendChild(buttonMark10Element);
-        fourthRow.appendChild(buttonMark15Element);
-        fourthRow.appendChild(buttonMark20Element);
-        fourthRow.appendChild(buttonMark30Element);
-        fourthRow.appendChild(buttonMarkNElement);
-        
-        fifthRow.appendChild(outputElement);
-        fifthRow.appendChild(buttonElement);
-
-        sixthhRow.appendChild(downloadButton);
-        sixthhRow.appendChild(copyButton);
-        sixthhRow.appendChild(clearButton);
-
-        seventhRow.appendChild(eraseButton);
-
-        livetsinerContainer.appendChild(secondRow);
-        livetsinerContainer.appendChild(thirdRow);
-        livetsinerContainer.appendChild(fourthRow);
-        livetsinerContainer.appendChild(fifthRow);
-        livetsinerContainer.appendChild(sixthhRow);
-        livetsinerContainer.appendChild(seventhRow);
-
-        livetsContainer.appendChild(firstRow);
-        livetsContainer.appendChild(livetsinerContainer);
-
-        titleElement.prepend(livetsContainer);
-
-        // titleElement.style.display = 'flex';
-        // titleElement.style.alignItems = 'left';
-        // titleElement.style.flexWrap = 'wrap';
-        // titleElement.style.flexDirection = 'column';
-
-        intervalId = setInterval(function() {
-            timestampElement.textContent = `${formatTime(video.currentTime)}`;
-        }, 250);
-
-        observer.disconnect();
-    }
+    observer.disconnect();
 });
-
 observer.observe(document, {childList: true, subtree: true});
 
+function createUI() {
+
+    let activityRow = document.createElement('div');
+    let timestampRow = document.createElement('div');
+    let playbackRow = document.createElement('div');
+    let tsControl1 = document.createElement('div');
+    let tsControl2 = document.createElement('div');
+
+    createUI_activity(activityRow);
+    createUI_timestamp(timestampRow);
+    createUI_playback(playbackRow);
+    createUI_tsControl1(tsControl1);
+    createUI_tsControl2(tsControl2);
+
+    livetsinerContainer.appendChild(playbackRow);
+    livetsinerContainer.appendChild(activityRow);
+    livetsinerContainer.appendChild(timestampRow);
+    livetsinerContainer.appendChild(tsControl1);
+    livetsinerContainer.appendChild(tsControl2);
+}
+
+function createUI_activity(container) {
+
+    let activitySelect = document.createElement('select');
+    activitySelect.style.fontSize = '18px';
+    activitySelect.style.padding = '5px 0px';
+    activitySelect.style.width = '28%';
+    activitySelect.id = 'livets-iner-activitySelect';
+
+    options.forEach(function(optionText) {
+        let optionElement = document.createElement('option');
+        optionElement.textContent = optionText;
+        optionElement.value = optionText;
+
+        activitySelect.appendChild(optionElement);
+    });
+
+    let tsActivityText = document.createElement('input');
+    tsActivityText.type = 'text';
+    tsActivityText.style.fontSize = '18px';
+    tsActivityText.style.padding = '5px 0px';
+    tsActivityText.style.width = '71%';
+    tsActivityText.id = 'livets-iner-tsActivityText';
+
+    container.appendChild(activitySelect);
+    container.appendChild(tsActivityText);
+};
+
+function createUI_timestamp(container) {
+
+    let decSel30 = document.createElement('button');
+    decSel30.textContent = '-30';
+    decSel30.style.fontSize = '18px';
+    decSel30.style.fontWeight = 'bold';
+    decSel30.style.padding = '5px 10px';
+    decSel30.style.backgroundColor = '#4cadf7';
+    decSel30.style.color = '#fff';
+    decSel30.style.border = 'black solid 1px';
+    decSel30.style.borderRadius = '5px';
+    decSel30.style.cursor = 'pointer';
+    decSel30.style.width = '14%';
+    decSel30.addEventListener('click', function() {
+        incrementSelectedTime(-30);
+    });
+
+    let decSel15 = document.createElement('button');
+    decSel15.textContent = '-15';
+    decSel15.style.fontSize = '18px';
+    decSel15.style.fontWeight = 'bold';
+    decSel15.style.padding = '5px 10px';
+    decSel15.style.backgroundColor = '#4cadf7';
+    decSel15.style.color = '#fff';
+    decSel15.style.border = 'black solid 1px';
+    decSel15.style.borderRadius = '5px';
+    decSel15.style.cursor = 'pointer';
+    decSel15.style.width = '14%';
+    decSel15.addEventListener('click', function() {
+        incrementSelectedTime(-15);
+    });
+    
+    let decSel05 = document.createElement('button');
+    decSel05.textContent = '-05';
+    decSel05.style.fontSize = '18px';
+    decSel05.style.fontWeight = 'bold';
+    decSel05.style.padding = '5px 10px';
+    decSel05.style.backgroundColor = '#4cadf7';
+    decSel05.style.color = '#fff';
+    decSel05.style.border = 'black solid 1px';
+    decSel05.style.borderRadius = '5px';
+    decSel05.style.cursor = 'pointer';
+    decSel05.style.width = '14%';
+    decSel05.addEventListener('click', function() {
+        incrementSelectedTime(-5);
+    });
+    
+    let set = document.createElement('button');
+    set.textContent = 'Set';
+    set.style.fontSize = '18px';
+    set.style.fontWeight = 'bold';
+    set.style.padding = '5px 10px';
+    set.style.backgroundColor = '#4cadf7';
+    set.style.color = '#fff';
+    set.style.border = 'black solid 1px';
+    set.style.borderRadius = '5px';
+    set.style.cursor = 'pointer';
+    set.style.width = '16%';
+    set.addEventListener('click', function() {
+        setSelectedTime();
+    });
+    
+    let encSel05 = document.createElement('button');
+    encSel05.textContent = '+05';
+    encSel05.style.fontSize = '18px';
+    encSel05.style.fontWeight = 'bold';
+    encSel05.style.padding = '5px 10px';
+    encSel05.style.backgroundColor = '#4cadf7';
+    encSel05.style.color = '#fff';
+    encSel05.style.border = 'black solid 1px';
+    encSel05.style.borderRadius = '5px';
+    encSel05.style.cursor = 'pointer';
+    encSel05.style.width = '14%';
+    encSel05.addEventListener('click', function() {
+        incrementSelectedTime(5);
+    });
+    
+    let encSel15 = document.createElement('button');
+    encSel15.textContent = '+15';
+    encSel15.style.fontSize = '18px';
+    encSel15.style.fontWeight = 'bold';
+    encSel15.style.padding = '5px 10px';
+    encSel15.style.backgroundColor = '#4cadf7';
+    encSel15.style.color = '#fff';
+    encSel15.style.border = 'black solid 1px';
+    encSel15.style.borderRadius = '5px';
+    encSel15.style.cursor = 'pointer';
+    encSel15.style.width = '14%';
+    encSel15.addEventListener('click', function() {
+        incrementSelectedTime(15);
+    });
+    
+    let encSel30 = document.createElement('button');
+    encSel30.textContent = '+30';
+    encSel30.style.fontSize = '18px';
+    encSel30.style.fontWeight = 'bold';
+    encSel30.style.padding = '5px 10px';
+    encSel30.style.backgroundColor = '#4cadf7';
+    encSel30.style.color = '#fff';
+    encSel30.style.border = 'black solid 1px';
+    encSel30.style.borderRadius = '5px';
+    encSel30.style.cursor = 'pointer';
+    encSel30.style.width = '14%';
+    encSel30.addEventListener('click', function() {
+        incrementSelectedTime(30);
+    });
+
+    container.appendChild(decSel30);
+    container.appendChild(decSel15);
+    container.appendChild(decSel05);
+    container.appendChild(set);
+    container.appendChild(encSel05);
+    container.appendChild(encSel15);
+    container.appendChild(encSel30);
+}
+
+function createUI_playback(container) {
+
+    let decCur30 = document.createElement('button');
+    decCur30.textContent = '-30';
+    decCur30.style.fontSize = '18px';
+    decCur30.style.fontWeight = 'bold';
+    decCur30.style.padding = '5px 10px';
+    decCur30.style.backgroundColor = '#4cadf7';
+    decCur30.style.color = '#fff';
+    decCur30.style.border = 'black solid 1px';
+    decCur30.style.borderRadius = '5px';
+    decCur30.style.cursor = 'pointer';
+    decCur30.style.width = '14%';
+    decCur30.addEventListener('click', function() {
+        incrementcurrentTime(-30);
+    });
+
+    let decCur15 = document.createElement('button');
+    decCur15.textContent = '-15';
+    decCur15.style.fontSize = '18px';
+    decCur15.style.fontWeight = 'bold';
+    decCur15.style.padding = '5px 10px';
+    decCur15.style.backgroundColor = '#4cadf7';
+    decCur15.style.color = '#fff';
+    decCur15.style.border = 'black solid 1px';
+    decCur15.style.borderRadius = '5px';
+    decCur15.style.cursor = 'pointer';
+    decCur15.style.width = '14%';
+    decCur15.addEventListener('click', function() {
+        incrementcurrentTime(-15);
+    });
+    
+    let decCur05 = document.createElement('button');
+    decCur05.textContent = '-05';
+    decCur05.style.fontSize = '18px';
+    decCur05.style.fontWeight = 'bold';
+    decCur05.style.padding = '5px 10px';
+    decCur05.style.backgroundColor = '#4cadf7';
+    decCur05.style.color = '#fff';
+    decCur05.style.border = 'black solid 1px';
+    decCur05.style.borderRadius = '5px';
+    decCur05.style.cursor = 'pointer';
+    decCur05.style.width = '14%';
+    decCur05.addEventListener('click', function() {
+        incrementcurrentTime(-5);
+    });
+    
+    let now = document.createElement('button');
+    now.textContent = '||';
+    now.style.fontSize = '18px';
+    now.style.fontWeight = 'bold';
+    now.style.padding = '5px 10px';
+    now.style.backgroundColor = '#4cadf7';
+    now.style.color = '#fff';
+    now.style.border = 'black solid 1px';
+    now.style.borderRadius = '5px';
+    now.style.cursor = 'pointer';
+    now.style.width = '16%';
+    now.addEventListener('click', function() {
+        playPauseVideo();
+    });
+    
+    let encCur05 = document.createElement('button');
+    encCur05.textContent = '+05';
+    encCur05.style.fontSize = '18px';
+    encCur05.style.fontWeight = 'bold';
+    encCur05.style.padding = '5px 10px';
+    encCur05.style.backgroundColor = '#4cadf7';
+    encCur05.style.color = '#fff';
+    encCur05.style.border = 'black solid 1px';
+    encCur05.style.borderRadius = '5px';
+    encCur05.style.cursor = 'pointer';
+    encCur05.style.width = '14%';
+    encCur05.addEventListener('click', function() {
+        incrementcurrentTime(5);
+    });
+    
+    let encCur15 = document.createElement('button');
+    encCur15.textContent = '+15';
+    encCur15.style.fontSize = '18px';
+    encCur15.style.fontWeight = 'bold';
+    encCur15.style.padding = '5px 10px';
+    encCur15.style.backgroundColor = '#4cadf7';
+    encCur15.style.color = '#fff';
+    encCur15.style.border = 'black solid 1px';
+    encCur15.style.borderRadius = '5px';
+    encCur15.style.cursor = 'pointer';
+    encCur15.style.width = '14%';
+    encCur15.addEventListener('click', function() {
+        incrementcurrentTime(15);
+    });
+    
+    let encCur30 = document.createElement('button');
+    encCur30.textContent = '+30';
+    encCur30.style.fontSize = '18px';
+    encCur30.style.fontWeight = 'bold';
+    encCur30.style.padding = '5px 10px';
+    encCur30.style.backgroundColor = '#4cadf7';
+    encCur30.style.color = '#fff';
+    encCur30.style.border = 'black solid 1px';
+    encCur30.style.borderRadius = '5px';
+    encCur30.style.cursor = 'pointer';
+    encCur30.style.width = '14%';
+    encCur30.addEventListener('click', function() {
+        incrementcurrentTime(30);
+    });
+
+    container.appendChild(decCur30);
+    container.appendChild(decCur15);
+    container.appendChild(decCur05);
+    container.appendChild(now);
+    container.appendChild(encCur05);
+    container.appendChild(encCur15);
+    container.appendChild(encCur30);
+}
+
+function createUI_tsControl1(container) {
+
+    let outputElement = document.createElement('input');
+    outputElement.type = 'text';
+    outputElement.style.fontSize = '18px';
+    outputElement.style.padding = '5px 0px';
+    outputElement.style.width = '71%';
+    outputElement.id = 'livets-iner-outputElement';
+    outputElement.readOnly = true;
+
+    let write = document.createElement('button');
+    write.textContent = 'TS';
+    write.style.fontSize = '18px';
+    write.style.fontWeight = 'bold';
+    write.style.padding = '5px 10px';
+    write.style.backgroundColor = 'green';
+    write.style.color = '#fff';
+    write.style.border = 'black solid 1px';
+    write.style.borderRadius = '5px';
+    write.style.cursor = 'pointer';
+    write.style.width = '28%';
+    write.addEventListener('click', function() {
+        generateTimestamp();
+    });
+
+    container.appendChild(outputElement);
+    container.appendChild(write);
+}
+
+function createUI_tsControl2(container) {
+
+    let del = document.createElement('button');
+    del.textContent = 'Del';
+    del.style.fontSize = '18px';
+    del.style.fontWeight = 'bold';
+    del.style.padding = '5px 10px';
+    del.style.backgroundColor = 'red';
+    del.style.color = 'black';
+    del.style.border = 'black solid 1px';
+    del.style.borderRadius = '5px';
+    del.style.cursor = 'pointer';
+    del.style.width = '14%';
+    del.addEventListener('click', function() {
+        deleteFile();
+    });
+
+    let head = document.createElement('button');
+    head.textContent = 'ST';
+    head.style.fontSize = '18px';
+    head.style.fontWeight = 'bold';
+    head.style.padding = '5px 10px';
+    head.style.backgroundColor = '#4cadf7';
+    head.style.color = '#fff';
+    head.style.border = 'black solid 1px';
+    head.style.borderRadius = '5px';
+    head.style.cursor = 'pointer';
+    head.style.width = '14%';
+    head.addEventListener('click', function() {
+        getHeader();
+    });
+
+    let download = document.createElement('button');
+    download.textContent = 'DL';
+    download.style.fontSize = '18px';
+    download.style.fontWeight = 'bold';
+    download.style.padding = '5px 10px';
+    download.style.backgroundColor = '#4cadf7';
+    download.style.color = '#fff';
+    download.style.border = 'black solid 1px';
+    download.style.borderRadius = '5px';
+    download.style.cursor = 'pointer';
+    download.style.width = '14%';
+    download.addEventListener('click', function() {
+        downloadFile();
+    });
+
+    let copy = document.createElement('button');
+    copy.textContent = 'CPY';
+    copy.style.fontSize = '18px';
+    copy.style.fontWeight = 'bold';
+    copy.style.padding = '5px 10px';
+    copy.style.backgroundColor = '#4cadf7';
+    copy.style.color = '#fff';
+    copy.style.border = 'black solid 1px';
+    copy.style.borderRadius = '5px';
+    copy.style.cursor = 'pointer';
+    copy.style.width = '30%';
+    copy.addEventListener('click', function() {
+        copyFile();
+    });
+
+    let clear = document.createElement('button');
+    clear.textContent = 'CLR';
+    clear.style.fontSize = '18px';
+    clear.style.fontWeight = 'bold';
+    clear.style.padding = '5px 10px';
+    clear.style.backgroundColor = '#4cadf7';
+    clear.style.color = '#fff';
+    clear.style.border = 'black solid 1px';
+    clear.style.borderRadius = '5px';
+    clear.style.cursor = 'pointer';
+    clear.style.width = '28%';
+    clear.addEventListener('click', function() {
+        clrActivityText();
+    });
+
+    container.appendChild(del);
+    container.appendChild(head);
+    container.appendChild(download);
+    container.appendChild(copy);
+    container.appendChild(clear);
+}
+
+// ****************************************************************************
+//                              Functions
+// ****************************************************************************
+
+// format time to hh:mm:ss format
 function formatTime(timeInSeconds) {
     let hours = Math.floor(timeInSeconds / 3600);
     let minutes = Math.floor((timeInSeconds - (hours * 3600)) / 60);
@@ -397,4 +474,169 @@ function formatTime(timeInSeconds) {
     seconds = ('0' + seconds).slice(-2);
 
     return `${hours}:${minutes}:${seconds}`;
+}
+
+// get time in seconds from hh:mm:ss format
+function getTimeInSeconds(time) {
+    let timeArray = time.split(':');
+    let hours = parseInt(timeArray[0]);
+    let minutes = parseInt(timeArray[1]);
+    let seconds = parseInt(timeArray[2]);
+
+    return (hours * 3600) + (minutes * 60) + seconds;
+}
+
+// increment current time
+function incrementcurrentTime(timeInSeconds) {
+    getCurrentTime();
+    currentTime += timeInSeconds;
+    if(currentTime<0){
+        currentTime = 0;
+    }
+    setCurrentTime(currentTime);
+}
+
+// increment selected time
+function incrementSelectedTime(timeInSeconds) {
+    selectedTime += timeInSeconds;
+
+    if(selectedTime<0){
+        selectedTime = 0;
+    }
+
+    let outputElement = document.querySelector('#livets-iner-outputElement');
+    let timestampText = `${formatTime(selectedTime)}`;
+    outputElement.value = timestampText;
+}
+
+// set selected time
+function setSelectedTime() {
+    getCurrentTime();
+    selectedTime = currentTime;
+
+    let outputElement = document.querySelector('#livets-iner-outputElement');
+    let timestampText = `${formatTime(selectedTime)}`;
+    outputElement.value = timestampText;
+}
+
+// generate timestamp text
+function generateTimestamp() {
+    let activity = document.querySelector('#livets-iner-activitySelect').value;
+    let tsActivityText = document.querySelector('#livets-iner-tsActivityText').value;
+
+    let timestampText;
+    if(tsActivityText == null || tsActivityText == ""){
+        timestampText = `${formatTime(selectedTime)} ${activity}\n`;
+    } else if(activity == null || activity == ""){
+        timestampText = `${formatTime(selectedTime)} ${tsActivityText}\n`;
+    } else {
+        timestampText = `${formatTime(selectedTime)} ${activity} ~ ${tsActivityText}\n`;
+    }
+
+    let outputElement = document.querySelector('#livets-iner-outputElement');
+    outputElement.value = timestampText;
+
+    timestampLine = timestampText;
+
+    if (outputTexts.length === 0) {
+        outputTexts.push(getHeader());
+    }
+    outputTexts.push(timestampLine);
+    navigator.clipboard.writeText(timestampLine).then(function() {
+        console.log('clipboard cpy: ok');
+    }, function(err) {
+        console.error('clipboard cpy: ', err);
+    });
+}
+
+// clear activity text
+function clrActivityText() {
+    let tsActivityText = document.querySelector('#livets-iner-tsActivityText');
+    tsActivityText.value = "";
+}
+
+function downloadFile() {
+    let outputText = outputTexts.join("");
+    let blob = new Blob([outputText], {type: 'text/plain'});
+    let url = URL.createObjectURL(blob);
+
+    let a = document.createElement('a');
+
+    let link = document.createElement('a');
+    link.href = url;
+    link.download = fileName;
+    link.click();
+}
+
+function copyFile() {
+    let outputText = outputTexts.join("");
+        
+    // Copy outputText to clipboard
+    navigator.clipboard.writeText(outputText).then(function() {
+        console.log('Copying to clipboard was successful!');
+    }, function(err) {
+        console.error('Could not copy text: ', err);
+    });
+}
+
+function deleteFile() {
+    outputTexts = [];
+}
+
+function getHeader() {
+    let url = window.location.href;
+
+    // remove query string after the video id
+    let index = url.indexOf('&');
+    if (index > 0) {
+        url = url.substring(0, index);
+    }
+
+    // header text is:
+    // {date in yyyy-mm-dd} ~ {page title} {cariage return }
+    // URL: {url}
+    let now = new Date();
+    let headerText = now.toISOString().slice(0,10) + " ~ " + document.title + "\nURL: " + url + "\n" + "0:00:00 Start\n";
+
+    fileName = now.toISOString().slice(0,10) + " ~ " + title + ".txt";
+
+    navigator.clipboard.writeText(headerText).then(function() {
+        console.log('clipboard cpy: ok');
+    }, function(err) {
+        console.error('clipboard cpy: ', err);
+    });
+
+    return headerText;
+}
+
+// ****************************************************************************
+//                      Platform Specific Functions
+// ****************************************************************************
+
+// get titleElement (where we will inject the UI)
+function getTitleElement() {
+    return document.querySelector('#secondary-inner.ytd-watch-flexy');
+}
+
+// get current time
+function getCurrentTime() {
+    let video = document.querySelector('video');
+    currentTime = video.currentTime;
+}
+
+// set current time
+function setCurrentTime(timeInSeconds) {
+    let video = document.querySelector('video');
+    currentTime = timeInSeconds;
+    video.currentTime = currentTime;
+}
+
+// play/pause video
+function playPauseVideo() {
+    let video = document.querySelector('video');
+    if (video.paused) {
+        video.play();
+    } else {
+        video.pause();
+    }
 }

@@ -1,8 +1,8 @@
 {
     "manifest_version": 3,
-    "name": "CA6.DEV LiveTS YT",
-    "description": "Timestamp creation tool",
-    "version": "0.1.0",
+    "name": "CA6 LiveTS",
+    "description": "Timestamp creation tool for Youtube stream. By CA6.DEV",
+    "version": "0.2.0",
     "permissions": [
         "activeTab",
         "downloads",
@@ -10,7 +10,7 @@
     ],
     "content_scripts": [
         {
-            "matches": ["https://www.youtube.com/*"],
+            "matches": ["https://www.youtube.com/*"], 
             "js": ["content.js"]
         }
     ],
