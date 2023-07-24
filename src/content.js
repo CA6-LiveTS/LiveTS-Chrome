@@ -8,7 +8,9 @@ let fileName;
 
 let livetsContainer;
 let livetsinerContainer;
-let options = ["", "Loading", "Break", "Ending", "End", "Zatsudan", "Gaming", "Karaoke", "Art", "Misc", "!TS", "!LiveTS"];
+let options = ["", "Loading", "Break", "Ending", "End", "Zatsudan", "Gaming", "Karaoke", "Art", "Misc", "TS", "LiveTS"];
+
+let isTS = false;
 
 // ****************************************************************************
 //                                      UI
@@ -367,13 +369,31 @@ function createUI_tsControl1(container) {
     write.style.border = 'black solid 1px';
     write.style.borderRadius = '5px';
     write.style.cursor = 'pointer';
-    write.style.width = '28%';
+    write.style.width = '14%';
     write.addEventListener('click', function() {
+        isTS = true;
+        generateTimestamp();
+    });
+
+    let writeCh = document.createElement('button');
+    writeCh.textContent = 'CH';
+    writeCh.style.fontSize = '18px';
+    writeCh.style.fontWeight = 'bold';
+    writeCh.style.padding = '5px 10px';
+    writeCh.style.backgroundColor = 'green';
+    writeCh.style.color = '#fff';
+    writeCh.style.border = 'black solid 1px';
+    writeCh.style.borderRadius = '5px';
+    writeCh.style.cursor = 'pointer';
+    writeCh.style.width = '14%';
+    writeCh.addEventListener('click', function() {
+        isTS = false;
         generateTimestamp();
     });
 
     container.appendChild(outputElement);
     container.appendChild(write);
+    container.appendChild(writeCh);
 }
 
 function createUI_tsControl2(container) {
@@ -525,12 +545,17 @@ function generateTimestamp() {
     let tsActivityText = document.querySelector('#livets-iner-tsActivityText').value;
 
     let timestampText;
+    let tsText = '';
+    if(isTS){
+        tsText = '!';
+    }
+
     if(tsActivityText == null || tsActivityText == ""){
-        timestampText = `${formatTime(selectedTime)} ${activity}\n`;
+        timestampText = `${formatTime(selectedTime)} ${tsText}${activity}\n`;
     } else if(activity == null || activity == ""){
-        timestampText = `${formatTime(selectedTime)} ${tsActivityText}\n`;
+        timestampText = `${formatTime(selectedTime)} ${tsText}${tsActivityText}\n`;
     } else {
-        timestampText = `${formatTime(selectedTime)} ${activity} ~ ${tsActivityText}\n`;
+        timestampText = `${formatTime(selectedTime)} ${tsText}${activity} ~ ${tsActivityText}\n`;
     }
 
     let outputElement = document.querySelector('#livets-iner-outputElement');
