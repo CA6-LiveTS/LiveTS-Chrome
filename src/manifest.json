@@ -5,8 +5,7 @@
     "version": "0.2.0",
     "permissions": [
         "activeTab",
-        "downloads",
-        "https://www.youtube.com/*"
+        "downloads"
     ],
     "content_scripts": [
         {
