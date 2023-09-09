@@ -16,7 +16,9 @@ Chrome extension for creating LiveTS files
 - open a youtube stream page
 - click on the LiveTS icon above chat
 
-###
+### 
+
+<img src="doc/diagram.png" width="50%" />
 
 ### Playback Control
 This part allow to Play/Pause and move backward/forward in the video
